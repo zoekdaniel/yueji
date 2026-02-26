@@ -1,5 +1,5 @@
 // ===== Service Worker — 悦己 MeTime =====
-const CACHE_NAME = 'yueji-v2';
+const CACHE_NAME = 'yueji-v3';
 const ASSETS = [
     './',
     './index.html',

@@ -140,6 +140,7 @@ const Store = {
         emoji: '🧴',
         freq: 'daily',
         timeSlot: 'morning',
+        scheduledTime: '07:30',
         note: '用温水洁面，动作轻柔~',
       },
       {
@@ -147,6 +148,7 @@ const Store = {
         emoji: '✨',
         freq: 'daily',
         timeSlot: 'evening',
+        scheduledTime: '22:00',
         note: '记得涂面霜，好好爱自己的肌肤',
       },
       {
@@ -155,6 +157,7 @@ const Store = {
         freq: 'interval',
         intervalDays: 2,
         timeSlot: 'anytime',
+        scheduledTime: '',
         note: '从前额梳到后脑，放松头皮',
       },
       {
@@ -162,6 +165,7 @@ const Store = {
         emoji: '🔥',
         freq: 'weekend',
         timeSlot: 'anytime',
+        scheduledTime: '15:00',
         note: '记录今天灸了哪个穴位',
       },
     ];

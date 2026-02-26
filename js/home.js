@@ -53,6 +53,7 @@ const Home = {
         this._renderGreeting();
         this._renderQuote();
         this._renderReminders();
+        this._renderProgress();
         this._renderTaskList();
     },
 
@@ -94,9 +95,25 @@ const Home = {
     },
 
     _renderQuote() {
-        // 根据日期确定语录（每天固定一条）
         const dayIndex = Math.floor(Date.now() / 86400000) % this.quotes.length;
         document.querySelector('.quote-text').textContent = this.quotes[dayIndex];
+    },
+
+    _renderProgress() {
+        const todayTasks = Tasks.getTodayTasks();
+        const { done, total } = Tasks.getProgress(todayTasks);
+        const container = document.getElementById('progress-bar');
+        if (!container || total === 0) return;
+        const pct = Math.round((done / total) * 100);
+        container.innerHTML = `
+            <div class="progress-info">
+                <span>今日进度</span>
+                <span class="progress-count">${done}/${total} 🌸</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" style="width:${pct}%"></div>
+            </div>
+        `;
     },
 
     _renderTaskList() {
@@ -112,21 +129,18 @@ const Home = {
 
         emptyState.classList.add('hidden');
 
-        const groups = Tasks.groupByTimeSlot(todayTasks);
-        let html = '';
+        // 按时间排序
+        const sorted = Tasks.sortByTime(todayTasks);
 
-        groups.forEach((group, gi) => {
-            // 把「已休息」的任务排到该分组最后
-            group.tasks.sort((a, b) => {
-                const aRested = a.todayStatus === 'rested' ? 1 : 0;
-                const bRested = b.todayStatus === 'rested' ? 1 : 0;
-                return aRested - bRested;
-            });
-            html += `<div class="task-section-title">${group.label}</div>`;
-            group.tasks.forEach((task, ti) => {
-                const delay = (gi * 3 + ti) * 0.08;
-                html += this._renderTaskCard(task, delay);
-            });
+        // 分两组：已休息排最后
+        const active = sorted.filter(t => t.todayStatus !== 'rested');
+        const rested = sorted.filter(t => t.todayStatus === 'rested');
+        const final = [...active, ...rested];
+
+        let html = '';
+        final.forEach((task, i) => {
+            const delay = i * 0.06;
+            html += this._renderTaskCard(task, delay);
         });
 
         container.innerHTML = html;
@@ -138,26 +152,33 @@ const Home = {
 
         if (task.todayStatus === 'done') {
             statusClass = 'completed';
-            actionsHtml = `<span class="task-status-badge badge-done">已完成 🌸</span>`;
+            actionsHtml = `
+                <span class="task-status-badge badge-done">已完成 🌸</span>
+                <button class="btn-undo" onclick="undoComplete('${task.id}')">撤销</button>
+            `;
         } else if (task.todayStatus === 'rested') {
             statusClass = 'rested';
             actionsHtml = `
-        <button class="btn-done" onclick="completeTask('${task.id}', this)" title="完成">
-          🌸
-        </button>
-        <button class="btn-undo-rest" onclick="undoRest('${task.id}')">
-          撤回休息
-        </button>
-      `;
+                <button class="btn-done" onclick="completeTask('${task.id}', this)" title="完成">
+                    <span class="btn-done-icon">🌸</span>
+                    <span class="btn-done-text">打卡</span>
+                </button>
+                <button class="btn-undo-rest" onclick="undoRest('${task.id}')">
+                    撤回休息
+                </button>
+            `;
         } else {
+            // 判断是否高亮（当前时间段）
+            if (Tasks.isCurrentSlot(task)) statusClass = 'current';
             actionsHtml = `
-        <button class="btn-done" onclick="completeTask('${task.id}', this)" title="完成">
-          🌸
-        </button>
-        <button class="btn-rest" onclick="restTask('${task.id}')">
-          今天太累了
-        </button>
-      `;
+                <button class="btn-done" onclick="completeTask('${task.id}', this)" title="完成">
+                    <span class="btn-done-icon">🌸</span>
+                    <span class="btn-done-text">打卡</span>
+                </button>
+                <button class="btn-rest" onclick="restTask('${task.id}')">
+                    今天太累了
+                </button>
+            `;
         }
 
         const noteHtml = task.note
@@ -168,12 +189,14 @@ const Home = {
             ? `<span class="task-status-badge badge-rest">下次再做 🌙</span>`
             : '';
 
+        const timeLabel = Tasks.getTimeLabel(task);
+
         return `
       <div class="task-card ${statusClass}" id="card-${task.id}" style="animation-delay:${delay}s">
         <div class="task-emoji">${task.emoji || '🌸'}</div>
         <div class="task-info">
           <div class="task-name">${restedBadge}${task.name}</div>
-          <div class="task-time">${Tasks.getFreqLabel(task)} · ${Tasks.getTimeSlotLabel(task.timeSlot)}</div>
+          <div class="task-time">${Tasks.getFreqLabel(task)} · ${timeLabel}</div>
           ${noteHtml}
         </div>
         <div class="task-actions">
@@ -198,17 +221,21 @@ function completeTask(taskId, btnEl) {
         FlowerAnimation.bloom(x, y);
     }
 
-    // 延迟更新UI，让动画先播放
     setTimeout(() => {
         Home.render();
     }, 500);
+}
+
+function undoComplete(taskId) {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    Store.removeRecord(taskId, todayStr);
+    Home.render();
 }
 
 function restTask(taskId) {
     const todayStr = new Date().toISOString().slice(0, 10);
     Store.setRecord(taskId, todayStr, 'rested');
 
-    // 显示安慰语
     showComfort();
 
     setTimeout(() => {

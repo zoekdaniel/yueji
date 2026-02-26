@@ -47,6 +47,7 @@
       <div id="gentle-reminders" class="gentle-reminders hidden">
         <!-- 百宝箱温柔提醒 -->
       </div>
+      <div id="progress-bar" class="progress-bar"></div>
       <div id="task-list" class="task-list">
         <!-- 动态渲染任务卡片 -->
       </div>
@@ -134,20 +135,15 @@
         </div>
 
         <div id="time-setting" class="form-group">
-          <label>时间段</label>
-          <div class="time-options">
-            <label class="time-opt selected">
-              <input type="radio" name="time-slot" value="morning" checked>
-              <span>🌅 早间</span>
+          <label>执行时间</label>
+          <div class="time-picker-row">
+            <label class="anytime-toggle">
+              <input type="checkbox" id="form-anytime" onchange="toggleAnytime(this)">
+              <span>☀️ 随时做</span>
             </label>
-            <label class="time-opt">
-              <input type="radio" name="time-slot" value="evening">
-              <span>🌙 晚间</span>
-            </label>
-            <label class="time-opt">
-              <input type="radio" name="time-slot" value="anytime">
-              <span>☀️ 随时</span>
-            </label>
+            <div id="time-input-wrap" class="time-input-wrap">
+              <input type="time" id="form-time" value="08:00" class="time-input">
+            </div>
           </div>
         </div>
 

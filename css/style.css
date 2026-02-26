@@ -302,17 +302,25 @@ a {
 }
 
 .btn-done {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-full);
+  padding: 10px 16px;
+  border-radius: 22px;
   background: linear-gradient(135deg, var(--sage-light), var(--sage));
   color: white;
-  font-size: 1.2rem;
+  font-size: 0.82rem;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 4px;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(156, 175, 136, 0.3);
+  white-space: nowrap;
+}
+
+.btn-done-icon {
+  font-size: 1rem;
+}
+
+.btn-done-text {
+  font-weight: 500;
 }
 
 .btn-done:active {
@@ -357,8 +365,14 @@ a {
   color: var(--lavender);
 }
 
+/* 当前时间段高亮 */
+.task-card.current {
+  border: 2px solid var(--sage);
+  box-shadow: 0 4px 16px rgba(156, 175, 136, 0.15);
+}
+
 .task-card.completed .task-actions {
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .task-status-badge {
@@ -393,6 +407,100 @@ a {
 
 .btn-undo-rest:active {
   background: var(--lavender-soft);
+}
+
+.btn-undo {
+  font-size: 0.65rem;
+  color: var(--pink);
+  text-align: center;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  margin-top: 4px;
+}
+
+.btn-undo:active {
+  background: var(--pink-soft);
+}
+
+/* ===== 进度条 ===== */
+.progress-bar {
+  margin-bottom: 16px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--light-gray);
+  margin-bottom: 6px;
+}
+
+.progress-count {
+  color: var(--sage);
+  font-weight: 500;
+}
+
+.progress-track {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--sage-light), var(--sage));
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+/* ===== 时间选择器 ===== */
+.time-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.anytime-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.anytime-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--sage);
+}
+
+.time-input-wrap {
+  flex: 1;
+}
+
+.time-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--warm-gray);
+  transition: border-color 0.3s ease;
+}
+
+.time-input:focus {
+  border-color: var(--sage);
+}
+
+.time-input-wrap.disabled {
+  opacity: 0.3;
+  pointer-events: none;
 }
 
 /* ===== 空状态 ===== */

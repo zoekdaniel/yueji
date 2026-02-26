@@ -25,7 +25,7 @@ const Manage = {
           <div class="manage-emoji">${task.emoji || '🌸'}</div>
           <div class="manage-info">
             <div class="manage-name">${task.name}</div>
-            <div class="manage-freq">${Tasks.getFreqLabel(task)} · ${Tasks.getTimeSlotLabel(task.timeSlot)}</div>
+            <div class="manage-freq">${Tasks.getFreqLabel(task)} · ${Tasks.getTimeLabel(task)}</div>
           </div>
           <div class="manage-arrow">›</div>
         </div>
@@ -50,17 +50,18 @@ function showTaskForm(taskId) {
     form.reset();
 
     // Emoji 选择默认
-    document.querySelectorAll('.emoji-opt').forEach(btn => btn.classList.remove('selected'));
-    document.querySelector('.emoji-opt[data-emoji="🌸"]').classList.add('selected');
+    document.querySelectorAll('#emoji-picker .emoji-opt').forEach(btn => btn.classList.remove('selected'));
+    document.querySelector('#emoji-picker .emoji-opt[data-emoji="🌸"]').classList.add('selected');
 
     // 频率选项默认
     document.querySelectorAll('.freq-opt').forEach(opt => opt.classList.remove('selected'));
     document.querySelector('.freq-opt:first-child').classList.add('selected');
     document.getElementById('interval-setting').classList.add('hidden');
 
-    // 时间段默认
-    document.querySelectorAll('.time-opt').forEach(opt => opt.classList.remove('selected'));
-    document.querySelector('.time-opt:first-child').classList.add('selected');
+    // 时间默认
+    document.getElementById('form-anytime').checked = false;
+    document.getElementById('form-time').value = '08:00';
+    document.getElementById('time-input-wrap').classList.remove('disabled');
 
     if (isEdit) {
         const task = Store.getTaskById(taskId);
@@ -69,7 +70,7 @@ function showTaskForm(taskId) {
             document.getElementById('form-note').value = task.note || '';
 
             // 选中对应 Emoji
-            document.querySelectorAll('.emoji-opt').forEach(btn => {
+            document.querySelectorAll('#emoji-picker .emoji-opt').forEach(btn => {
                 btn.classList.toggle('selected', btn.dataset.emoji === task.emoji);
             });
 
@@ -86,17 +87,25 @@ function showTaskForm(taskId) {
                 document.getElementById('form-interval').value = task.intervalDays || 2;
             }
 
-            // 选中对应时间段
-            const timeRadio = document.querySelector(`input[name="time-slot"][value="${task.timeSlot || 'anytime'}"]`);
-            if (timeRadio) {
-                timeRadio.checked = true;
-                document.querySelectorAll('.time-opt').forEach(opt => opt.classList.remove('selected'));
-                timeRadio.closest('.time-opt').classList.add('selected');
+            // 时间
+            if (task.scheduledTime) {
+                document.getElementById('form-anytime').checked = false;
+                document.getElementById('form-time').value = task.scheduledTime;
+                document.getElementById('time-input-wrap').classList.remove('disabled');
+            } else {
+                // 随时 or 旧数据
+                document.getElementById('form-anytime').checked = true;
+                document.getElementById('time-input-wrap').classList.add('disabled');
             }
         }
     }
 
     navigateTo('form');
+}
+
+function toggleAnytime(checkbox) {
+    const wrap = document.getElementById('time-input-wrap');
+    wrap.classList.toggle('disabled', checkbox.checked);
 }
 
 function editTask(taskId) {
@@ -109,15 +118,26 @@ function saveTask(event) {
     const name = document.getElementById('form-name').value.trim();
     if (!name) return;
 
-    const selectedEmoji = document.querySelector('.emoji-opt.selected');
+    const selectedEmoji = document.querySelector('#emoji-picker .emoji-opt.selected');
     const emoji = selectedEmoji ? selectedEmoji.dataset.emoji : '🌸';
 
     const freq = document.querySelector('input[name="freq"]:checked').value;
-    const timeSlot = document.querySelector('input[name="time-slot"]:checked').value;
     const note = document.getElementById('form-note').value.trim();
     const intervalDays = parseInt(document.getElementById('form-interval').value) || 2;
 
-    const taskData = { name, emoji, freq, timeSlot, note };
+    const isAnytime = document.getElementById('form-anytime').checked;
+    const scheduledTime = isAnytime ? '' : document.getElementById('form-time').value;
+
+    const taskData = { name, emoji, freq, note, scheduledTime };
+
+    // 兼容：保留 timeSlot 便于旧逻辑
+    if (scheduledTime) {
+        const h = parseInt(scheduledTime.split(':')[0]);
+        taskData.timeSlot = h < 12 ? 'morning' : (h >= 18 ? 'evening' : 'anytime');
+    } else {
+        taskData.timeSlot = 'anytime';
+    }
+
     if (freq === 'interval') {
         taskData.intervalDays = intervalDays;
     }
@@ -134,7 +154,6 @@ function saveTask(event) {
 
 function deleteTask() {
     if (Manage.currentEditId) {
-        // 简单确认
         if (confirm('确定要删除这个任务吗？')) {
             Store.deleteTask(Manage.currentEditId);
             Manage.currentEditId = null;
@@ -149,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('emoji-picker').addEventListener('click', (e) => {
         const btn = e.target.closest('.emoji-opt');
         if (!btn) return;
-        document.querySelectorAll('.emoji-opt').forEach(b => b.classList.remove('selected'));
+        document.querySelectorAll('#emoji-picker .emoji-opt').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
     });
 
@@ -160,14 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
             opt.classList.add('selected');
             const val = opt.querySelector('input').value;
             document.getElementById('interval-setting').classList.toggle('hidden', val !== 'interval');
-        });
-    });
-
-    // 时间段选项
-    document.querySelectorAll('.time-opt').forEach(opt => {
-        opt.addEventListener('click', () => {
-            document.querySelectorAll('.time-opt').forEach(o => o.classList.remove('selected'));
-            opt.classList.add('selected');
         });
     });
 });
