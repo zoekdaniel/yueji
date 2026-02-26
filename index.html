@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="悦己">
+  <meta name="theme-color" content="#FAF7F2">
+  <meta name="description" content="悦己 MeTime — 无压力的自我关怀空间">
+  <title>悦己 MeTime</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- 开花动画 Canvas 覆盖层 -->
+  <canvas id="flower-canvas"></canvas>
+
+  <!-- 安慰语弹窗 -->
+  <div id="comfort-overlay" class="comfort-overlay hidden">
+    <div class="comfort-card">
+      <div class="comfort-emoji">🌙</div>
+      <p class="comfort-text"></p>
+      <button class="comfort-close" onclick="closeComfort()">知道了 💗</button>
+    </div>
+  </div>
+
+  <!-- ===== 页面容器 ===== -->
+  <main id="app">
+
+    <!-- 首页：爱自己清单 -->
+    <section id="page-home" class="page active">
+      <header class="page-header">
+        <div class="greeting">
+          <h1 class="greeting-text"></h1>
+          <p class="greeting-date"></p>
+        </div>
+      </header>
+      <div class="daily-quote">
+        <p class="quote-text"></p>
+      </div>
+      <div id="task-list" class="task-list">
+        <!-- 动态渲染任务卡片 -->
+      </div>
+      <div id="empty-state" class="empty-state hidden">
+        <div class="empty-emoji">🌿</div>
+        <p>今天没有待办任务</p>
+        <p class="empty-sub">去「管理」页面添加你的关怀任务吧</p>
+      </div>
+    </section>
+
+    <!-- 管理页：任务管理 -->
+    <section id="page-manage" class="page">
+      <header class="page-header">
+        <h1>我的关怀任务</h1>
+      </header>
+      <div id="manage-list" class="manage-list">
+        <!-- 动态渲染 -->
+      </div>
+      <button id="btn-add-task" class="btn-add" onclick="showTaskForm()">
+        <span class="btn-add-icon">+</span>
+        <span>添加新任务</span>
+      </button>
+    </section>
+
+    <!-- 添加/编辑任务表单页 -->
+    <section id="page-form" class="page">
+      <header class="page-header">
+        <button class="btn-back" onclick="navigateTo('manage')">← 返回</button>
+        <h1 id="form-title">添加任务</h1>
+      </header>
+      <form id="task-form" class="task-form" onsubmit="saveTask(event)">
+        <input type="hidden" id="form-task-id">
+
+        <div class="form-group">
+          <label for="form-name">任务名称</label>
+          <input type="text" id="form-name" placeholder="例如：皮肤清洁保养" required>
+        </div>
+
+        <div class="form-group">
+          <label for="form-emoji">选择图标</label>
+          <div id="emoji-picker" class="emoji-picker">
+            <button type="button" class="emoji-opt selected" data-emoji="🌸">🌸</button>
+            <button type="button" class="emoji-opt" data-emoji="🧴">🧴</button>
+            <button type="button" class="emoji-opt" data-emoji="💆">💆</button>
+            <button type="button" class="emoji-opt" data-emoji="🧘">🧘</button>
+            <button type="button" class="emoji-opt" data-emoji="🔥">🔥</button>
+            <button type="button" class="emoji-opt" data-emoji="💅">💅</button>
+            <button type="button" class="emoji-opt" data-emoji="🍵">🍵</button>
+            <button type="button" class="emoji-opt" data-emoji="🌿">🌿</button>
+            <button type="button" class="emoji-opt" data-emoji="💤">💤</button>
+            <button type="button" class="emoji-opt" data-emoji="✨">✨</button>
+            <button type="button" class="emoji-opt" data-emoji="🫧">🫧</button>
+            <button type="button" class="emoji-opt" data-emoji="🪷">🪷</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>任务频率</label>
+          <div class="freq-options">
+            <label class="freq-opt selected">
+              <input type="radio" name="freq" value="daily" checked>
+              <span class="freq-label">每日必修</span>
+              <span class="freq-desc">每天都出现</span>
+            </label>
+            <label class="freq-opt">
+              <input type="radio" name="freq" value="interval">
+              <span class="freq-label">灵活间隔</span>
+              <span class="freq-desc">每隔 N 天</span>
+            </label>
+            <label class="freq-opt">
+              <input type="radio" name="freq" value="weekend">
+              <span class="freq-label">周末充能</span>
+              <span class="freq-desc">仅周六日</span>
+            </label>
+          </div>
+        </div>
+
+        <div id="interval-setting" class="form-group hidden">
+          <label for="form-interval">间隔天数</label>
+          <div class="interval-input">
+            <span>每</span>
+            <input type="number" id="form-interval" min="2" max="30" value="2">
+            <span>天一次</span>
+          </div>
+        </div>
+
+        <div id="time-setting" class="form-group">
+          <label>时间段</label>
+          <div class="time-options">
+            <label class="time-opt selected">
+              <input type="radio" name="time-slot" value="morning" checked>
+              <span>🌅 早间</span>
+            </label>
+            <label class="time-opt">
+              <input type="radio" name="time-slot" value="evening">
+              <span>🌙 晚间</span>
+            </label>
+            <label class="time-opt">
+              <input type="radio" name="time-slot" value="anytime">
+              <span>☀️ 随时</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="form-note">温柔备注（可选）</label>
+          <textarea id="form-note" placeholder="例如：记得用温水，动作轻柔一点~" rows="3"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-save">保存任务 🌸</button>
+          <button type="button" class="btn-delete hidden" id="btn-delete" onclick="deleteTask()">删除任务</button>
+        </div>
+      </form>
+    </section>
+
+  </main>
+
+  <!-- 底部导航 -->
+  <nav id="bottom-nav" class="bottom-nav">
+    <button class="nav-item active" data-page="home" onclick="navigateTo('home')">
+      <span class="nav-icon">🏡</span>
+      <span class="nav-label">今日</span>
+    </button>
+    <button class="nav-item" data-page="manage" onclick="navigateTo('manage')">
+      <span class="nav-icon">🌿</span>
+      <span class="nav-label">管理</span>
+    </button>
+  </nav>
+
+  <script src="js/store.js"></script>
+  <script src="js/tasks.js"></script>
+  <script src="js/flower.js"></script>
+  <script src="js/home.js"></script>
+  <script src="js/manage.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
