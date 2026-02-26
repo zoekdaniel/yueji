@@ -4,7 +4,7 @@ let currentPage = 'home';
 
 function navigateTo(pageName) {
     // 隐藏表单页时不更新底部导航
-    const isFormPage = pageName === 'form';
+    const isSubPage = ['form', 'item-form', 'category-manager'].includes(pageName);
 
     // 当前页面淡出
     const currentEl = document.querySelector('.page.active');
@@ -28,9 +28,11 @@ function navigateTo(pageName) {
             // 渲染页面内容
             if (pageName === 'home') Home.render();
             if (pageName === 'manage') Manage.render();
+            if (pageName === 'calendar') Calendar.render();
+            if (pageName === 'treasure') Treasure.render();
 
             // 更新底部导航
-            if (!isFormPage) {
+            if (!isSubPage) {
                 currentPage = pageName;
                 document.querySelectorAll('.nav-item').forEach(btn => {
                     btn.classList.toggle('active', btn.dataset.page === pageName);
@@ -39,7 +41,7 @@ function navigateTo(pageName) {
 
             // 控制导航栏在表单页的显示
             document.getElementById('bottom-nav').style.display =
-                isFormPage ? 'none' : 'flex';
+                isSubPage ? 'none' : 'flex';
         }, 200);
     }
 }

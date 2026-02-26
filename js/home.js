@@ -52,7 +52,25 @@ const Home = {
     render() {
         this._renderGreeting();
         this._renderQuote();
+        this._renderReminders();
         this._renderTaskList();
+    },
+
+    _renderReminders() {
+        const container = document.getElementById('gentle-reminders');
+        if (typeof Treasure === 'undefined') {
+            container.classList.add('hidden');
+            return;
+        }
+        const reminders = Treasure.getGentleReminders();
+        if (reminders.length === 0) {
+            container.classList.add('hidden');
+            return;
+        }
+        container.classList.remove('hidden');
+        container.innerHTML = reminders.map(msg =>
+            `<div class="reminder-card">🛍️ ${msg}</div>`
+        ).join('');
     },
 
     _renderGreeting() {

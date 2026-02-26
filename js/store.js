@@ -3,7 +3,9 @@
 const Store = {
   KEYS: {
     TASKS: 'yueji_tasks',
-    RECORDS: 'yueji_records', // 每日完成记录
+    RECORDS: 'yueji_records',
+    CATEGORIES: 'yueji_categories',
+    TREASURE: 'yueji_treasure',
   },
 
   // ===== 任务 CRUD =====
@@ -164,5 +166,79 @@ const Store = {
       },
     ];
     defaults.forEach(t => this.addTask(t));
-  }
+  },
+
+  // ===== 百宝箱：分区管理 =====
+  getCategories() {
+    const data = localStorage.getItem(this.KEYS.CATEGORIES);
+    if (data) return JSON.parse(data);
+    // 初始化默认分区
+    const defaults = [
+      { id: 'cat_skincare', name: '洗漱护肤区', emoji: '🫧', isDefault: true },
+      { id: 'cat_makeup', name: '彩妆魔法区', emoji: '💄', isDefault: true },
+      { id: 'cat_personal', name: '私护安心区', emoji: '🌸', isDefault: true },
+      { id: 'cat_wardrobe', name: '胶囊衣橱区', emoji: '👗', isDefault: true },
+    ];
+    localStorage.setItem(this.KEYS.CATEGORIES, JSON.stringify(defaults));
+    return defaults;
+  },
+
+  getCategoryById(id) {
+    return this.getCategories().find(c => c.id === id) || null;
+  },
+
+  addCategory(cat) {
+    const categories = this.getCategories();
+    cat.id = 'cat_' + this._genId();
+    cat.isDefault = false;
+    categories.push(cat);
+    localStorage.setItem(this.KEYS.CATEGORIES, JSON.stringify(categories));
+    return cat;
+  },
+
+  removeCategory(catId) {
+    let categories = this.getCategories();
+    categories = categories.filter(c => c.id !== catId);
+    localStorage.setItem(this.KEYS.CATEGORIES, JSON.stringify(categories));
+  },
+
+  // ===== 百宝箱：物品管理 =====
+  getTreasureItems() {
+    const data = localStorage.getItem(this.KEYS.TREASURE);
+    return data ? JSON.parse(data) : [];
+  },
+
+  _saveTreasureItems(items) {
+    localStorage.setItem(this.KEYS.TREASURE, JSON.stringify(items));
+  },
+
+  getTreasureItemById(id) {
+    return this.getTreasureItems().find(i => i.id === id) || null;
+  },
+
+  addTreasureItem(item) {
+    const items = this.getTreasureItems();
+    item.id = 'item_' + this._genId();
+    item.createdAt = new Date().toISOString();
+    items.push(item);
+    this._saveTreasureItems(items);
+    return item;
+  },
+
+  updateTreasureItem(id, updates) {
+    const items = this.getTreasureItems();
+    const idx = items.findIndex(i => i.id === id);
+    if (idx !== -1) {
+      items[idx] = { ...items[idx], ...updates };
+      this._saveTreasureItems(items);
+      return items[idx];
+    }
+    return null;
+  },
+
+  deleteTreasureItem(id) {
+    let items = this.getTreasureItems();
+    items = items.filter(i => i.id !== id);
+    this._saveTreasureItems(items);
+  },
 };
